@@ -1,0 +1,69 @@
+const router = require("express").Router();
+const passport = require("passport");
+
+const User = require("../models/user");
+const hash = require("../hash.js");
+const saltRounds = parseInt(process.env.SALT_ROUNDS);
+
+const session = {session: false};
+
+//============================== register user ============================
+
+// takes the authenticated req and returns a response
+const register = async (req, res, next) => {
+    try {
+        req.user.name ? res.status(201).json({msg: 'user registered', user: req.user}): res.status(401).json({msg: "User already exists"});
+    } catch (error) {
+        next(error);
+    }
+};
+
+// http://localhost/user/createuser
+//register router - authenticate using registerStrategy (names 'register') and
+// passes on the register function defined above
+router.post("/registeruser", passport.authenticate("register", session), register);
+
+
+//==============================  ===============================
+
+
+// http://localhost/user/getallusers
+// get all users
+router.get("/getallusers", async(req, res) => {
+    const allUsers = await User.findAll({
+        attributes: ["id", "name"]
+    });
+    res.status(200).json({msg: "worked", data: allUsers});
+});
+
+
+
+// delete all users
+router.delete("/deleteallusers", async(req, res) => {
+    const deletedUser = await User.destroy({where: {}});
+    console.log(deletedUser)
+    res.status(200).json({msg: `Deleted ${deletedUser}`});
+});
+
+// get a single user
+router.get("/:id", async(req, res) => {
+    const user = await User.findOne({where: {id: req.params.id}});
+    res.status(200).json({msg: user});
+});
+
+// update a single user
+router.put("/:id", async(req, res) => {
+    const updatedUser = await User.update({name: req.body.newName}, {where: {id: req.params.id}})
+    const user = await User.findOne({where: {id: req.params.id}});
+    res.status(200).json({msg: user});
+});
+
+// delete a single user
+router.delete("/:id", async(req, res) => {
+    const user = await User.findOne({where: {id: req.params.id}});
+    const deletedUser = await user.destroy();
+    console.log(deletedUser)
+    res.status(200).json({msg: deletedUser});
+});
+
+module.exports = router;
