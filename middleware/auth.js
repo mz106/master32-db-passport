@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
 const LocalStrategy = require("passport-local").Strategy;
+const ExtractJWT = require("passport-jwt").ExtractJwt;
+const JWTStrategy = require("passport-jwt").Strategy;
 
 const User = require("../models/user");
 
@@ -47,10 +49,24 @@ const login = async (name, password, next) => {
     }
 };
 
+const verify = (token, next) => {
+    try {
+        next(null, token.user);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const verifyStrategy = new JWTStrategy({
+    secretOrKey: process.env.SECRET_KEY,
+    jwtFromRequest: ExtractJWT.fromUrlQueryParameter("secret_token")
+}, verify);
+
 const registerStrategy = new LocalStrategy(mappings, register);
 const loginStrategy = new LocalStrategy(mappings, login);
 
 module.exports = {
     registerStrategy,
     loginStrategy,
+    verifyStrategy
 };

@@ -3,11 +3,17 @@ const passport = require("passport");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
-const hash = require("../hash.js");
-const JwtStrategy = require("passport-jwt/lib/strategy");
 const saltRounds = parseInt(process.env.SALT_ROUNDS);
 
 const session = {session: false};
+
+//============================== / =======================================
+
+const profile = (req, res, next) => {
+    res.status(200).json({message: "profile", user: req.user, token: req.query.secret_token});
+};
+
+router.get("/", passport.authenticate("jwt", session), profile);
 
 //============================== register user ============================
 
