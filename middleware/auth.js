@@ -31,8 +31,26 @@ const register = async (name, password, next) => {
     }
 };
 
+const login = async (name, password, next) => {
+    try {
+        const user = await User.findOne({where: {name: name}});
+
+        if (!user) {
+            return next(null, null, {message: "Incorrect name"});
+        }
+
+        const match = await bcrypt.compare(password, user.passwordHash);
+        return match ? next(null, user) : next(null, null, {message: "Incorrect password"});
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 const registerStrategy = new LocalStrategy(mappings, register);
+const loginStrategy = new LocalStrategy(mappings, login);
 
 module.exports = {
-    registerStrategy
+    registerStrategy,
+    loginStrategy,
 };

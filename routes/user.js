@@ -1,8 +1,10 @@
 const router = require("express").Router();
 const passport = require("passport");
+const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 const hash = require("../hash.js");
+const JwtStrategy = require("passport-jwt/lib/strategy");
 const saltRounds = parseInt(process.env.SALT_ROUNDS);
 
 const session = {session: false};
@@ -18,14 +20,43 @@ const register = async (req, res, next) => {
     }
 };
 
-// http://localhost/user/createuser
+// http://localhost/user/registeruser
 //register router - authenticate using registerStrategy (names 'register') and
 // passes on the register function defined above
 router.post("/registeruser", passport.authenticate("register", session), register);
 
 
-//==============================  ===============================
+//============================== login ===============================
 
+const login = async (req, res, next) => {
+    passport.authenticate("login", (error, user) => {
+        try {
+            if (error) {
+                res.status(500).json({message: "Internal Server Error"});
+            } else if (!user) {
+                res.status(401).json(info);
+            } else {
+                const loginFn = (error) => {
+                    if(error) {
+                        return next(error);
+                    } else {
+                        const userData = {id: user.id, name: user.name};
+                        const data = {user, token: jwt.sign({user: userData}, process.env.SECRET_KEY)};
+                        res.status(200).json(data);
+                    }
+                };
+
+                req.login(user, session, loginFn);
+            }
+        } catch (error) {
+            return next(error);
+        }
+    })(req, res, next); //IFFY - Immediately Invoked Function Expression
+};
+
+router.post("/userlogin", login);
+
+//============================== =====================================
 
 // http://localhost/user/getallusers
 // get all users
