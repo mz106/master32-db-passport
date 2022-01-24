@@ -19,6 +19,7 @@ router.get("/", passport.authenticate("jwt", session), profile);
 
 // takes the authenticated req and returns a response
 const register = async (req, res, next) => {
+    console.log(req.body);
     try {
         req.user.name ? res.status(201).json({msg: 'user registered', user: req.user}): res.status(401).json({msg: "User already exists"});
     } catch (error) {
@@ -40,7 +41,7 @@ const login = async (req, res, next) => {
             if (error) {
                 res.status(500).json({message: "Internal Server Error"});
             } else if (!user) {
-                res.status(401).json(info);
+                res.status(401).json({message: "not authourized"});
             } else {
                 const loginFn = (error) => {
                     if(error) {
@@ -60,7 +61,7 @@ const login = async (req, res, next) => {
     })(req, res, next); //IFFY - Immediately Invoked Function Expression
 };
 
-router.post("/userlogin", login);
+router.post("/login", login);
 
 //============================== =====================================
 
